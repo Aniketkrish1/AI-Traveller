@@ -1,0 +1,286 @@
+/* Basic Setup */
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    line-height: 1.6;
+    background-color: #f4f7f6;
+    margin: 0;
+    padding: 0;
+}
+
+header {
+    background-color: #007bff;
+    color: white;
+    text-align: center;
+    padding: 1rem 0;
+}
+
+main {
+    max-width: 800px;
+    margin: 20px auto;
+    padding: 0 20px;
+}
+
+/* Planner form grid */
+.row { display:flex; gap:12px; }
+.col { flex:1 }
+
+/* Date input styling */
+input[type="date"] {
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    background: #fff;
+}
+
+@media (max-width:700px){
+    .row { flex-direction: column }
+}
+
+/* Form Styling */
+#planner-form {
+    background: #ffffff;
+    padding: 2rem;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+#planner-form label {
+    display: block;
+    font-weight: 600;
+    margin-top: 15px;
+}
+
+#planner-form input[type="text"],
+#planner-form input[type="date"],
+#planner-form select {
+    width: 100%;
+    padding: 10px;
+    margin-top: 5px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    box-sizing: border-box; /* Important for 100% width */
+}
+
+#planner-form button {
+    background-color: #28a745;
+    color: white;
+    font-size: 1rem;
+    font-weight: 600;
+    padding: 12px 20px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-top: 20px;
+    width: 100%;
+    transition: background-color 0.3s ease;
+}
+
+#planner-form button:hover {
+    background-color: #218838;
+}
+
+/* Results Section */
+#results-container {
+    margin-top: 30px;
+}
+
+/* This is the dynamic card style from your synopsis  */
+/* We will apply this to the output from the AI */
+.itinerary-card {
+    background: #ffffff;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    padding: 1.5rem;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    animation: fadeIn 0.5s ease-in-out; /* CSS Animation */
+}
+
+.itinerary-card h2 {
+    color: #007bff;
+    border-bottom: 2px solid #f0f0f0;
+    padding-bottom: 10px;
+}
+
+.itinerary-card h3 {
+    color: #333;
+}
+
+.itinerary-card ul {
+    list-style-type: '✈️';
+    padding-left: 20px;
+}
+
+.itinerary-card li {
+    margin-bottom: 10px;
+}
+
+/* Loading Spinner */
+#loading {
+    text-align: center;
+    font-size: 1.2rem;
+    color: #555;
+    padding: 20px;
+}
+
+.hidden {
+    display: none;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Results page layout */
+.results-main {
+    max-width: 1100px;
+    margin: 24px auto;
+    padding: 0 20px 60px;
+}
+
+.search-summary {
+    display:flex;
+    gap:12px;
+    align-items:center;
+    margin-bottom:12px;
+}
+.search-summary .meta { color:#374151 }
+
+.sub {
+    font-size: 0.95rem;
+    margin-top: 6px;
+    color: rgba(255,255,255,0.95);
+}
+
+#itinerary-section {
+    margin-bottom: 30px;
+}
+
+.results-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 18px;
+    align-items: start;
+}
+
+.place-card {
+    background: #fff;
+    border: 1px solid #e6e9ee;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 6px 20px rgba(20,30,50,0.06);
+    display: flex;
+    flex-direction: column;
+    transition: transform 0.18s ease, box-shadow 0.18s ease;
+}
+.place-card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 12px 30px rgba(20,30,50,0.09);
+}
+
+.place-card .media img {
+    width: 100%;
+    height: 160px;
+    object-fit: cover;
+    display: block;
+}
+
+.place-card .content {
+    padding: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    flex: 1 1 auto;
+}
+
+.place-name {
+    margin: 0;
+    font-size: 1.05rem;
+    color: #0b2545;
+}
+
+.place-desc {
+    margin: 0;
+    color: #4b5563;
+    font-size: 0.92rem;
+}
+
+.place-address {
+    margin: 0;
+    font-size: 0.85rem;
+    color: #6b7280;
+}
+
+.card-footer {
+    margin-top: auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+}
+
+.map-link {
+    background: #007bff;
+    color: white;
+    text-decoration: none;
+    padding: 8px 12px;
+    border-radius: 8px;
+    font-weight: 600;
+}
+
+.rating {
+    color: #ef9a00;
+    font-weight: 700;
+}
+
+.muted { color: #6b7280; }
+
+.actions { display:flex; gap:12px; margin-top:24px; }
+.btn { padding:10px 16px; border-radius:8px; cursor:pointer; border:none; font-weight:700 }
+.btn.primary { background:#28a745; color:#fff }
+.btn.secondary { background:#e9eef5; color:#0b2545 }
+
+@media (max-width:600px){
+    .place-card .media img { height: 140px }
+}
+
+/* Carousel / slides */
+.carousel-wrap {
+    display:flex;
+    align-items:center;
+    gap:12px;
+    margin: 18px 0 8px;
+}
+.carousel {
+    flex:1;
+    min-height: 180px;
+    position: relative;
+    overflow: hidden;
+    border-radius: 12px;
+}
+.slide {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    padding: 18px;
+    background: linear-gradient(180deg, rgba(255,255,255,0.98), #fff);
+    opacity: 0;
+    transform: translateX(10px);
+    transition: all 0.36s cubic-bezier(.2,.9,.2,1);
+    box-shadow: 0 6px 20px rgba(16,24,40,0.04);
+}
+.slide.active { opacity: 1; transform: translateX(0); position: relative; }
+.slide-title { margin: 0 0 8px; color:#0b2545 }
+.slide-body { color:#374151 }
+.slide-inner { max-height: 460px; overflow:auto }
+.slide-control {
+    background:#fff; border:1px solid #e6eef5; color:#0b2545; font-size:22px; width:44px; height:44px; border-radius:8px; cursor:pointer;
+}
+.slide-control:hover { transform: translateY(-2px); box-shadow:0 8px 20px rgba(2,6,23,0.06) }
+.hidden { display:none }

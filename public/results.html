@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Trip Results - AI Travel Planner</title>
+    <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+    <header>
+        <h1>AI-Travel Planner</h1>
+        <p class="sub">Your personalized trip recommendations</p>
+    </header>
+
+    <main class="results-main">
+        <section id="itinerary-section">
+            <h2>Itinerary</h2>
+            <div id="search-summary" class="search-summary" aria-live="polite"></div>
+
+            <div class="carousel-wrap">
+                <button id="prev-slide" class="slide-control">‹</button>
+                <div id="carousel" class="carousel" aria-live="polite"></div>
+                <button id="next-slide" class="slide-control">›</button>
+            </div>
+
+            <div id="itinerary-render" class="hidden"></div>
+        </section>
+
+        <section id="places-section">
+            <h2>Recommended Places</h2>
+            <div id="places-grid" class="results-grid"></div>
+        </section>
+
+        <div class="actions">
+            <button id="back-btn" class="btn secondary">Back to Planner</button>
+            <button id="new-search-btn" class="btn primary">New Search</button>
+        </div>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script>
+        // Read results from sessionStorage
+        const raw = sessionStorage.getItem('aiTravelResults');
+        if (!raw) {
+            document.body.innerHTML = '<main style="max-width:800px;margin:40px auto;padding:20px;"><h2>No results found</h2><p>Please go back and generate your trip.</p><a href="index.html">Back</a></main>';
+        } else {
+            const data = JSON.parse(raw);
+            const itineraryEl = document.getElementById('itinerary-render');
+            const placesGrid = document.getElementById('places-grid');
+
+            // Render itinerary (Markdown -> HTML)
+            try {
+                itineraryEl.innerHTML = `<div class="itinerary-card">${marked.parse(data.itinerary || '')}</div>`;
+            } catch (e) {
+                itineraryEl.innerHTML = `<div class="itinerary-card">${data.itinerary || ''}</div>`;
+            }
+
+            // Build slides per day by parsing the rendered Markdown HTML
+            const carousel = document.getElementById('carousel');
+            carousel.innerHTML = '';
+            const html = marked.parse(data.itinerary || '');
+            // Create a temporary container to parse headings/sections
+            const temp = document.createElement('div');
+            temp.innerHTML = html;
+
+            // Find heading nodes that indicate days (h1/h2/h3 starting with "Day" or "Day 1")
+            const nodes = Array.from(temp.children);
+            let currentSlide = { title: 'Overview', content: [] };
+            const slides = [];
+
+            function pushCurrent() {
+                if (currentSlide && (currentSlide.content.length > 0 || currentSlide.title)) {
+                    slides.push(currentSlide);
+                }
+            }
+
+            for (let n of nodes) {
+                const text = (n.textContent || '').trim();
+                const isDay = /^\s*Day\b/i.test(text) || /^\s*Day\s*\d+/i.test(text);
+                if ((/H1|H2|H3/i).test(n.tagName) && isDay) {
+                    // new slide
+                    pushCurrent();
+                    currentSlide = { title: text, content: [] };
+                } else {
+                    currentSlide.content.push(n.outerHTML);
+                }
+            }
+            pushCurrent();
+
+            // If no slides found, show the whole itinerary as single slide
+            const slidesToShow = slides.length > 0 ? slides : [{ title: 'Itinerary', content: [html] }];
+
+            slidesToShow.forEach((s, i) => {
+                const item = document.createElement('article');
+                item.className = 'slide';
+                if (i === 0) item.classList.add('active');
+                item.innerHTML = `
+                    <div class="slide-inner">
+                        <h3 class="slide-title">${s.title}</h3>
+                        <div class="slide-body">${s.content.join('\n')}</div>
+                    </div>
+                `;
+                carousel.appendChild(item);
+            });
+
+            // Carousel controls
+            const prevBtn = document.getElementById('prev-slide');
+            const nextBtn = document.getElementById('next-slide');
+            let activeIndex = 0;
+            function showSlide(idx) {
+                const items = carousel.querySelectorAll('.slide');
+                if (!items.length) return;
+                items.forEach((it, j) => {
+                    it.classList.toggle('active', j === idx);
+                });
+                activeIndex = idx;
+            }
+            prevBtn.addEventListener('click', () => {
+                const items = carousel.querySelectorAll('.slide');
+                showSlide((activeIndex - 1 + items.length) % items.length);
+            });
+            nextBtn.addEventListener('click', () => {
+                const items = carousel.querySelectorAll('.slide');
+                showSlide((activeIndex + 1) % items.length);
+            });
+
+            // Make itinerary-render visible only if no slides; otherwise keep raw hidden
+            document.getElementById('itinerary-render').classList.add('hidden');
+
+            // Render search summary (from the query saved before redirect)
+            const rawQuery = sessionStorage.getItem('aiTravelQuery');
+            if (rawQuery) {
+                try {
+                    const q = JSON.parse(rawQuery);
+                    const summaryEl = document.getElementById('search-summary');
+                    const sd = q.startDate ? new Date(q.startDate).toLocaleDateString() : '';
+                    const ed = q.endDate ? new Date(q.endDate).toLocaleDateString() : '';
+                    summaryEl.innerHTML = `
+                        <div class="meta">
+                            <strong>${q.destination || ''}</strong>
+                            <div>${sd && ed ? `${sd} — ${ed}` : (sd || ed)}</div>
+                            <div>${q.interests ? q.interests : ''} • ${q.style ? q.style : ''}</div>
+                        </div>
+                    `;
+                } catch (e) {
+                    // ignore
+                }
+            }
+
+            // Render places grid
+            const places = Array.isArray(data.places) ? data.places : [];
+            if (places.length === 0) {
+                placesGrid.innerHTML = '<p class="muted">No place recommendations available.</p>';
+            } else {
+                placesGrid.innerHTML = places.map(place => {
+                    const img = place.image && place.image.length ? place.image : 'https://source.unsplash.com/collection/190727/800x600';
+                    const rating = (place.rating !== null && place.rating !== undefined) ? `<span class="rating">⭐ ${place.rating}</span>` : '';
+                    const address = place.address || '';
+                    const mapHref = (place.latitude && place.longitude) ? `https://www.google.com/maps/search/?api=1&query=${place.latitude},${place.longitude}` : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`;
+
+                    return `
+                        <article class="place-card">
+                            <div class="media"><img src="${img}" alt="${place.name}"></div>
+                            <div class="content">
+                                <h3 class="place-name">${place.name}</h3>
+                                <p class="place-desc">${place.short_description || ''}</p>
+                                <p class="place-address">${address}</p>
+                                <div class="card-footer">
+                                    ${rating}
+                                    <a target="_blank" rel="noopener" href="${mapHref}" class="map-link">View on Map</a>
+                                </div>
+                            </div>
+                        </article>
+                    `;
+                }).join('');
+            }
+        }
+
+        // Buttons
+        document.getElementById('back-btn').addEventListener('click', () => {
+            window.location.href = 'index.html';
+        });
+        document.getElementById('new-search-btn').addEventListener('click', () => {
+            // Clear stored results and go back
+            sessionStorage.removeItem('aiTravelResults');
+            window.location.href = 'index.html';
+        });
+    </script>
+</body>
+</html>
